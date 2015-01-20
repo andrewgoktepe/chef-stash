@@ -35,11 +35,11 @@ when 'mysql'
       server_debian_password node['mysql']['server_debian_password']
       server_repl_password node['mysql']['server_repl_password']
       package_action 'install'
+      action :create
     else
       initial_root_password mysql_server_root_password
-      package_action :install
+      action [:create, :start]
     end
-    action :create
   end
 
   include_recipe 'database::mysql'
