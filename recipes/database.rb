@@ -7,7 +7,34 @@ database_connection = {
 
 case settings['database']['type']
 when 'mysql'
-  include_recipe 'mysql::server'
+
+  # compatible with both v5 and v6 of the mysql cookbook
+  # read old mysql attributes but use mysql_service
+  # resource instead of deprecated mysql::server recipe
+  mysql_data_dir = node['mysql']['data_dir']
+  unless mysql_data_dir
+    case node['platform']
+    when 'smartos'
+      mysql_data_dir = '/opt/local/lib/mysql'
+      node.default['mysql']['data_dir'] = mysql_data_dir
+    else
+      mysql_data_dir = '/var/lib/mysql'
+      node.default['mysql']['data_dir'] = mysql_data_dir
+    end
+  end
+  mysql_service_name = node['mysql']['service_name'] || 'default'
+  mysql_port = node['mysql']['port'] || '3306'
+  mysql_server_root_password = node['mysql']['server_root_password'] || 'ilikerandompasswords'
+  mysql_service mysql_service_name do
+    port mysql_port
+    data_dir mysql_data_dir
+    server_root_password mysql_server_root_password
+    server_debian_password node['mysql']['server_debian_password']
+    server_repl_password node['mysql']['server_repl_password']
+    package_action 'install'
+    action :create
+  end
+
   include_recipe 'database::mysql'
   database_connection.merge!(:username => 'root', :password => node['mysql']['server_root_password'])
 
