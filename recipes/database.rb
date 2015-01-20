@@ -1,5 +1,7 @@
 settings = Stash.settings(node)
 
+include_recipe 'chef-sugar'
+
 database_connection = {
   :host => settings['database']['host'],
   :port => settings['database']['port']
@@ -28,10 +30,15 @@ when 'mysql'
   mysql_service mysql_service_name do
     port mysql_port
     data_dir mysql_data_dir
-    server_root_password mysql_server_root_password
-    server_debian_password node['mysql']['server_debian_password']
-    server_repl_password node['mysql']['server_repl_password']
-    package_action 'install'
+    if Chef::Sugar::Constraints::Version.new(run_context.cookbook_collection['mysql'].metadata.version).satisfies?('< 6.0')
+      server_root_password mysql_server_root_password
+      server_debian_password node['mysql']['server_debian_password']
+      server_repl_password node['mysql']['server_repl_password']
+      package_action 'install'
+    else
+      initial_root_password mysql_server_root_password
+      package_action :install
+    end
     action :create
   end
 
