@@ -19,6 +19,8 @@ recipe 'stash::tomcat_configuration', "Configures Stash's built-in Tomcat"
   supports os
 end
 
-%w(apache2 ark cron database git java mysql mysql_connector perl postgresql).each do |cb|
+%w(apache2 ark cron git java mysql_connector perl postgresql).each do |cb|
   depends cb
 end
+depends 'mysql', '< 6.0'
+depends 'database', '< 3.0'
